@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .question {
+            margin: 20px 0;
+     
+            text-align:center;
+        }
+        .hint {
+            display: none;
+            color: #888;
+        }
+        .answer {
+            margin-top: 10px;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="table-title">
+
+    </div>
+    <table class="table-fill" id="data-table">
+        <thead>
+            <tr>
+                <th class="text-left">순번</th>
+                <th class="text-left">X</th>
+                <th class="text-left">3X</th>
+                <th class="text-left">X + 10</th>
+            </tr>
+        </thead>
+        <tbody class="table-hover" id="table-body">
+        </tbody>
+    
+    </table>
+
+    <br>
+    <br>
+    <table class="table-fill">
+        <thead>
+            <tr>
+
+            </tr>
+
+        </thead>
+
+        <tfoot id="table-footer">
+            <!-- 통계 데이터가 추가될 예정 -->
+        </tfoot>
+    </table>
+    <div class="question">
+        <button class="btn" onclick="showChart()"><span>그래프 보기</span></button>
+        <div>
+            <canvas id="studentChart"></canvas>
+        </div>
+    </div>
+    
+    <br>
+    <br>
+
+    <div class="question">
+        <h3>1. X와 3X의 평균, 분산, 표준편차는 어떤 관계가 있을까?</h3>
+        <button class="btn"onclick="toggleHint('hint1')"><span>힌트 보기</span></button>
+        <p class="hint" id="hint1">3X의 평균은 X의 3배, 분산은 3의 제곱배, 표준편차는 3배가 됩니다.</p>
+    </div>
+
+    <div class="question">
+        <h3>2. X와 X+10의 평균, 분산, 표준편차는 어떤 관계가 있을까?</h3>
+        <button class="btn"onclick="toggleHint('hint2')"><span>힌트 보기</span></button>
+        <p class="hint" id="hint2">X+10은 평균이 10 증가하지만 분산과 표준편차는 변하지 않습니다.</p>
+    </div>
+
+    <div class="question">
+        <h3>3. 그래프를 봤을 때 X와 X+10의 분포를 비교하면?</h3>
+        <button class="btn"onclick="toggleHint('hint3')"><span>힌트 보기</span></button>
+        <p class="hint" id="hint3">X+10의 분포는 X의 분포를 X축으로 10만큼 평행 이동한 형태입니다.</p>
+        
+     
+    </div>
+
+    <div class="question">
+        <h3>4. 2X+5의 평균은 어떻게 될지 예상해보자</h3>
+        <button class="btn"onclick="toggleHint('hint4')"><span>힌트 보기</span></button>
+        <p class="hint" id="hint4">X+10의 평균은 X의 평균에서 10을 더한 값이며 3X의 평균은 X의 평균에서 3을 곱한값입니다.</p>
+        <p class="answer" id="answer4"></p>
+    </div>
+
+    <script>
+     const studentCount = 10; // 학생 수를 지정
+        const xValues = [90, 92, 55, 80, 43, 60, 67, 95, 50, 40]; // 각 학생의 X 값을 할당
+
+        // 테이블 채우기 함수
+        function fillTable() {
+            const tableBody = document.getElementById('table-body');
+            const tableFooter = document.getElementById('table-footer');
+            tableBody.innerHTML = ''; // 테이블 본문을 비움
+            tableFooter.innerHTML = ''; // 테이블 푸터를 비움
+
+            let xArray = [], threeXArray = [], xPlus10Array = [];
+
+            for (let i = 0; i < studentCount; i++) {
+                const x = xValues[i];
+                const threeX = 3 * x;
+                const xPlus10 = x + 10;
+
+                xArray.push(x);
+                threeXArray.push(threeX);
+                xPlus10Array.push(xPlus10);
+
+                const row = document.createElement('tr');
+
+                const cell1 = document.createElement('td');
+                cell1.textContent = `학생 ${i + 1}`;
+                row.appendChild(cell1);
+
+                const cell2 = document.createElement('td');
+                cell2.textContent = x;
+                row.appendChild(cell2);
+
+                const cell3 = document.createElement('td');
+                cell3.textContent = threeX;
+                row.appendChild(cell3);
+
+                const cell4 = document.createElement('td');
+                cell4.textContent = xPlus10;
+                row.appendChild(cell4);
+
+                tableBody.appendChild(row);
+            }
+
+            // 통계 데이터 표시 (평균, 분산, 표준편차)
+            const meanX = calculateMean(xArray);
+            const mean3X = calculateMean(threeXArray);
+            const meanXPlus10 = calculateMean(xPlus10Array);
+
+            const varianceX = calculateVariance(xArray, meanX);
+            const variance3X = calculateVariance(threeXArray, mean3X);
+            const varianceXPlus10 = calculateVariance(xPlus10Array, meanXPlus10);
+
+            const stdDevX = calculateStdDev(varianceX);
+            const stdDev3X = calculateStdDev(variance3X);
+            const stdDevXPlus10 = calculateStdDev(varianceXPlus10);
+
+            // 테이블 푸터에 통계 데이터 추가
+            const statsRowMean = document.createElement('tr');
+            statsRowMean.innerHTML = `
+                <td><strong><a class="tooltip" href="#">평균<span class="custom help"><em>평균</em>변량의 합 / 인원수</span></a></strong></td>
+                <td>${meanX.toFixed(2)}</td>
+                <td>${mean3X.toFixed(2)}</td>
+                <td>${meanXPlus10.toFixed(2)}</td>
+            `;
+            tableFooter.appendChild(statsRowMean);
+
+            const statsRowVariance = document.createElement('tr');
+            statsRowVariance.innerHTML = `
+                <td><strong><a class="tooltip" href="#">분산<span class="custom help"><em>편차제곱의 평균</em>편차: 변량-평균, 편차제곱: (변량-평균)^2</span></a></strong></td>
+                <td>${varianceX.toFixed(2)}</td>
+                <td>${variance3X.toFixed(2)}</td>
+                <td>${varianceXPlus10.toFixed(2)}</td>
+            `;
+            tableFooter.appendChild(statsRowVariance);
+
+            const statsRowStdDev = document.createElement('tr');
+            statsRowStdDev.innerHTML = `
+                <td><strong><a class="tooltip" href="#">표준편차<span class="custom help"><em>표준편차</em>분산^0.5</span></a></strong></td>
+                <td>${stdDevX.toFixed(2)}</td>
+                <td>${stdDev3X.toFixed(2)}</td>
+                <td>${stdDevXPlus10.toFixed(2)}</td>
+            `;
+            tableFooter.appendChild(statsRowStdDev);
+        }
+
+        // 평균 계산 함수
+        function calculateMean(values) {
+            const sum = values.reduce((a, b) => a + b, 0);
+            return sum / values.length;
+        }
+
+        // 분산 계산 함수
+        function calculateVariance(values, mean) {
+            const squaredDiffs = values.map(x => Math.pow(x - mean, 2));
+            return calculateMean(squaredDiffs);
+        }
+
+        // 표준편차 계산 함수
+        function calculateStdDev(variance) {
+            return Math.sqrt(variance);
+        }
+
+        // 그래프를 그리는 함수
+        function showChart() {
+
+            
+const ctx = document.getElementById('studentChart').getContext('2d');
+
+const xValues = [90, 92, 55, 80, 43, 60, 67, 95, 50, 40]; // X 값 배열
+const threeXValues = xValues.map(x => 3 * x); // 3X 값 배열
+const xPlus10Values = xValues.map(x => x + 10); // X + 10 값 배열
+
+new Chart(ctx, {
+    type: 'line', // 꺾은선 그래프 타입
+    data: {
+        labels: ['학생 1', '학생 2', '학생 3', '학생 4', '학생 5', '학생 6', '학생 7', '학생 8', '학생 9', '학생 10'], // X축에 표시할 학생들
+        datasets: [
+            {
+                label: 'X 값',
+                data: xValues,
+                borderColor: 'rgba(75, 192, 192, 1)', // 선 색상
+                borderWidth: 2,
+                fill: false, // 채우기 옵션 비활성화
+                tension: 0.1 // 부드러운 꺾은선
+            },
+            {
+                label: '3X 값',
+                data: threeXValues,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            },
+            {
+                label: 'X + 10 값',
+                data: xPlus10Values,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+        },
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: '학생'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: '값'
+                }
+            }
+        }
+    }
+});
+}
+
+        // 2X + 5 평균 계산 및 표시
+        function calculate2XPlus5Mean() {
+            const meanX = calculateMean(xValues);
+            const result = 2 * meanX + 5;
+            document.getElementById('answer4').textContent = `2X + 5의 평균은 ${result.toFixed(2)}입니다.`;
+        }
+
+        // 힌트 토글 기능
+        function toggleHint(id) {
+            const hint = document.getElementById(id);
+            hint.style.display = hint.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 초기 테이블 채우기
+        fillTable();
+    </script>
+</body>
+</html>
