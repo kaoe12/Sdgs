@@ -138,10 +138,26 @@
 
                 const cell3 = document.createElement('td');
                 cell3.textContent = threeX;
+                if (i <= 3) {
+                    console.log("added")
+                    cell3.classList.add('table-cell');
+                    cell3.classList.add('hidden-value');
+                    cell3.textContent = "숨김";
+                    cell3.setAttribute("data-value", threeX)
+                    cell3.setAttribute("onclick", "revealValue(this)")
+                }
                 row.appendChild(cell3);
 
                 const cell4 = document.createElement('td');
                 cell4.textContent = xPlus10;
+                if (i >= 5) {
+                    console.log("added")
+                    cell4.classList.add('table-cell');
+                    cell4.classList.add('hidden-value');
+                    cell4.textContent = "숨김";
+                    cell4.setAttribute("data-value", xPlus10)
+                    cell4.setAttribute("onclick", "revealValue(this)")
+                }
                 row.appendChild(cell4);
 
                 tableBody.appendChild(row);
